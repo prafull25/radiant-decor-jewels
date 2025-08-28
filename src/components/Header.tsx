@@ -8,9 +8,10 @@ import myrraaLogo from "@/assets/myrraa-logo.jpg";
 interface HeaderProps {
   onSearch: (query: string) => void;
   cartCount: number;
+  onOpenCart: () => void;
 }
 
-export const Header = ({ onSearch, cartCount }: HeaderProps) => {
+export const Header = ({ onSearch, cartCount, onOpenCart }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -56,7 +57,7 @@ export const Header = ({ onSearch, cartCount }: HeaderProps) => {
               <span className="text-sm">Wishlist</span>
             </Button>
             
-            <Button variant="ghost" size="sm" className="relative">
+            <Button variant="ghost" size="sm" className="relative" onClick={onOpenCart}>
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
                 <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">

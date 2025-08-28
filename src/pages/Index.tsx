@@ -2,17 +2,19 @@ import { useState, useMemo } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { CategoryFilter } from "@/components/CategoryFilter";
-import { ProductCard } from "@/components/ProductCard";
+import { ProductCard, Product } from "@/components/ProductCard";
 import { VideoAd } from "@/components/VideoAd";
 import { Footer } from "@/components/Footer";
+import { CartDrawer, CartItem } from "@/components/CartDrawer";
 import { products, categories } from "@/data/products";
 import { toast } from "sonner";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
-  const [cartItems, setCartItems] = useState<string[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [wishlistItems, setWishlistItems] = useState<string[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Filter products based on search and category
   const filteredProducts = useMemo(() => {
@@ -34,10 +36,43 @@ const Index = () => {
     }
   };
 
-  const handleAddToCart = (product: any) => {
-    setCartItems(prev => [...prev, product.id]);
+  const handleAddToCart = (product: Product) => {
+    setCartItems(prev => {
+      const existingItem = prev.find(item => item.product.id === product.id);
+      if (existingItem) {
+        return prev.map(item =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...prev, { product, quantity: 1 }];
+      }
+    });
     toast.success(`${product.name} added to cart!`);
   };
+
+  const handleUpdateCartQuantity = (productId: string, quantity: number) => {
+    if (quantity === 0) {
+      handleRemoveFromCart(productId);
+      return;
+    }
+    setCartItems(prev =>
+      prev.map(item =>
+        item.product.id === productId
+          ? { ...item, quantity }
+          : item
+      )
+    );
+  };
+
+  const handleRemoveFromCart = (productId: string) => {
+    setCartItems(prev => prev.filter(item => item.product.id !== productId));
+    const product = products.find(p => p.id === productId);
+    toast.success(`${product?.name} removed from cart`);
+  };
+
+  const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const handleToggleWishlist = (productId: string) => {
     setWishlistItems(prev => {
@@ -63,7 +98,8 @@ const Index = () => {
       {/* Header */}
       <Header 
         onSearch={handleSearch} 
-        cartCount={cartItems.length}
+        cartCount={totalCartItems}
+        onOpenCart={() => setIsCartOpen(true)}
       />
 
       {/* Hero Section */}
@@ -135,6 +171,15 @@ const Index = () => {
 
       {/* Footer */}
       <Footer />
+
+      {/* Cart Drawer */}
+      <CartDrawer
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cartItems={cartItems}
+        onUpdateQuantity={handleUpdateCartQuantity}
+        onRemoveItem={handleRemoveFromCart}
+      />
     </div>
   );
 };
